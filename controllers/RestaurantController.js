@@ -60,7 +60,31 @@ app.get('/api/restaurants/:id', async (req, res) => {
 });
 
 //.
+// Route to update a specific restaurant by ID
+app.put('/api/restaurants/:id', async (req, res) => {
+  try {
+    const updatedRestaurant = await updateRestaurantById(req.body, req.params.id);
+    if (!updatedRestaurant) {
+      res.status(404).json({ message: 'Restaurant not found' });
+    } else {
+      res.json({ message: 'Restaurant updated successfully' });
+    }
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
 
+// Route to delete a specific restaurant by ID
+app.delete('/api/restaurants/:id', async (req, res) => {
+  try {
+    await deleteRestaurantById(req.params.id);
+    res.json({ message: 'Restaurant deleted successfully' });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
 
 
 
