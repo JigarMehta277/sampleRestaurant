@@ -1,7 +1,7 @@
 
 const express = require("express");
 const bodyParser = require('body-parser');
-const connectDB = require("./config/db");
+const connectDB = require("../config/db");
 const path = require("path");
 const app = express();
 
@@ -60,27 +60,31 @@ app.get('/api/restaurants/:id', async (req, res) => {
 });
 
 //.
-const updateRestaurantById = async (data, id) => {
-  try {
-    const updatedRestaurant = await Restaurant.findByIdAndUpdate(id, data, { new: true });
-    console.log('Restaurant updated successfully');
-    return updatedRestaurant;
-  } catch (err) {
-    console.error('Error updating restaurant by ID:', err.message);
-    return null;
-  }
-};
 
-// Delete an existing restaurant whose "_id" value matches the "Id" parameter
-const deleteRestaurantById = async (id) => {
+app.put('/api/restaurants/:id', async (req, res) => {
   try {
-    await Restaurant.findByIdAndDelete(id);
-    console.log('Restaurant deleted successfully');
-  } catch (err) {
-    console.error('Error deleting restaurant by ID:', err.message);
+    const updatedRestaurant = await updateRestaurantById(req.body, req.params.id);
+    if (!updatedRestaurant) {
+      res.status(404).json({ message: 'Restaurant not found' });
+    } else {
+      res.json({ message: 'Restaurant updated successfully' });
+    }
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
-};
+});
 
+// Route to delete a specific restaurant by ID
+app.delete('/api/restaurants/:id', async (req, res) => {
+  try {
+    await deleteRestaurantById(req.params.id);
+    res.json({ message: 'Restaurant deleted successfully' });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
 
 
 //.
