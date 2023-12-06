@@ -1,96 +1,84 @@
-
-const express = require("express");
-const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 const connectDB = require("../config/db");
-const path = require("path");
-const app = express();
+const Restaurant = require('../models/Restaurant');
 
-//Connect Database
+// Establish a connection with the MongoDB server and initialize the "Restaurant" model
 connectDB();
 
+// Create a new restaurant in the collection using the object passed in the "data" parameter
+const addNewRestaurant = async (data) => {
+  try {
+    const newRestaurant = new Restaurant(data);
+    await newRestaurant.save();
+    console.log('Restaurant added successfully');
+  } catch (err) {
+    console.error('Error adding restaurant:', err.message);
+  }
+};
 
-const {
+
+const getAllRestaurants = async (page, perPage, borough) => {
+  try {
+    const skip = (page - 1) * perPage;
+    let query = {};
+
+    if (borough) {
+      query = { 'address.borough': borough };
+    }
+
+    const restaurants = await Restaurant.find(query)
+      .sort({ restaurant_id: 1 })
+      .skip(skip)
+      .limit(perPage);
+
+    return restaurants;
+  } catch (err) {
+    console.error('Error fetching restaurants:', err.message);
+    return [];
+  }
+};
+
+// Return a single restaurant object whose "_id" value matches the "Id" parameter
+const getRestaurantById = async (id) => {
+  try {
+    const restaurant = await Restaurant.findById(id);
+    return restaurant;
+  } catch (err) {
+    console.error('Error fetching restaurant by ID:', err.message);
+    return null;
+  }
+};
+
+//.
+
+const updateRestaurantById = async (data, id) => {
+  try {
+    const updatedRestaurant = await Restaurant.findByIdAndUpdate(id, data, { new: true });
+    console.log('Restaurant updated successfully');
+    return updatedRestaurant;
+  } catch (err) {
+    console.error('Error updating restaurant by ID:', err.message);
+    return null;
+  }
+};
+
+// Delete an existing restaurant whose "_id" value matches the "Id" parameter
+const deleteRestaurantById = async (id) => {
+  try {
+    await Restaurant.findByIdAndDelete(id);
+    console.log('Restaurant deleted successfully');
+  } catch (err) {
+    console.error('Error deleting restaurant by ID:', err.message);
+  }
+};
+
+//.
+
+module.exports = {
+  connectDB,
   addNewRestaurant,
   getAllRestaurants,
   getRestaurantById,
   updateRestaurantById,
   deleteRestaurantById,
-} = require('./controllers/RestaurantController');
-
-
-app.use(bodyParser.json());
-
-
-// Route to add a new restaurant
-app.post('/api/restaurants', async (req, res) => {
-  try {
-    await addNewRestaurant(req.body);
-    res.status(201).json({ message: 'Restaurant added successfully' });
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-});
-
-// Route to get all restaurants with optional query parameters
-app.get('/api/restaurants', async (req, res) => {
-  try {
-    const { page, perPage, borough } = req.query;
-    const restaurants = await getAllRestaurants(Number(page), Number(perPage), borough);
-    res.json(restaurants);
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-});
-
-// Route to get a specific restaurant by ID
-app.get('/api/restaurants/:id', async (req, res) => {
-  try {
-    const restaurant = await getRestaurantById(req.params.id);
-    if (!restaurant) {
-      res.status(404).json({ message: 'Restaurant not found' });
-    } else {
-      res.json(restaurant);
-    }
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-});
-
-//.
-// Route to update a specific restaurant by ID
-app.put('/api/restaurants/:id', async (req, res) => {
-  try {
-    const updatedRestaurant = await updateRestaurantById(req.body, req.params.id);
-    if (!updatedRestaurant) {
-      res.status(404).json({ message: 'Restaurant not found' });
-    } else {
-      res.json({ message: 'Restaurant updated successfully' });
-    }
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-});
-
-// Route to delete a specific restaurant by ID
-app.delete('/api/restaurants/:id', async (req, res) => {
-  try {
-    await deleteRestaurantById(req.params.id);
-    res.json({ message: 'Restaurant deleted successfully' });
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-});
-
-
-
-//.
-
-
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+};
