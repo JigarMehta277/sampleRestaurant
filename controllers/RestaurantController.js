@@ -60,7 +60,26 @@ app.get('/api/restaurants/:id', async (req, res) => {
 });
 
 //.
+const updateRestaurantById = async (data, id) => {
+  try {
+    const updatedRestaurant = await Restaurant.findByIdAndUpdate(id, data, { new: true });
+    console.log('Restaurant updated successfully');
+    return updatedRestaurant;
+  } catch (err) {
+    console.error('Error updating restaurant by ID:', err.message);
+    return null;
+  }
+};
 
+// Delete an existing restaurant whose "_id" value matches the "Id" parameter
+const deleteRestaurantById = async (id) => {
+  try {
+    await Restaurant.findByIdAndDelete(id);
+    console.log('Restaurant deleted successfully');
+  } catch (err) {
+    console.error('Error deleting restaurant by ID:', err.message);
+  }
+};
 
 
 
